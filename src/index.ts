@@ -1,8 +1,14 @@
-export type Error =
-  & symbol
-  & Readonly<{
-    timestamp: number;
-  }>;
+export type Error = Omit<
+  Readonly<
+    (
+      & symbol
+      & {
+        timestamp: number;
+      }
+    )
+  >,
+  "toString" | "valueOf"
+>;
 
 export type MaybeError = [Error, undefined];
 export type MaybeSuccess<Success> = [undefined, Success];
@@ -14,11 +20,13 @@ export type IsSuccess<T> = T extends MaybeSuccess<T> ? true : false;
 
 export const succeed = <T>(value: T): MaybeSuccess<T> => [undefined, value];
 
-export const fail = (description?: any): MaybeError => {
+export const fail = (description?: string | number): MaybeError => {
   return [
-    Object.assign(Symbol(description), {
-      timestamp: Date.now(),
-    }),
+    Object.freeze(
+      Object.assign(Symbol(description), {
+        timestamp: Date.now(),
+      }),
+    ),
     undefined,
   ];
 };
