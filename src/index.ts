@@ -1,13 +1,8 @@
-export type Error = Omit<
-  Readonly<
-    (
-      & symbol
-      & {
-        timestamp: number;
-      }
-    )
-  >,
-  "toString" | "valueOf"
+export type Error = Readonly<
+  {
+    description: string | number | undefined;
+    timestamp: number;
+  }
 >;
 
 export type MaybeError = [Error, undefined];
