@@ -1,7 +1,7 @@
 {
   "name": "@intzaaa/maybe",
   "private": false,
-  "version": "3.1.0",
+  "version": "3.1.2",
   "scripts": {
     "build": "tsup ./src/index.ts --minify --dts --clean --format esm,cjs,iife --target es3",
     "test": "node ./src/test.js",

@@ -11,20 +11,20 @@ export type MaybeFailed<T> = Readonly<
   MaybeFailedBase<T> & MaybeFailedHandler<T>
 >;
 
-type MaybeSucceedBase<T> = [undefined, T];
-type MaybeSucceedHandler<T> = {
+type MaybeSucceededBase<T> = [undefined, T];
+type MaybeSucceededHandler<T> = {
   failed: (handler: (error: never) => void) => T;
   succeeded: (handler: (value: T) => void) => void;
 };
-export type MaybeSucceed<T> = Readonly<
-  MaybeSucceedBase<T> & MaybeSucceedHandler<T>
+export type MaybeSucceeded<T> = Readonly<
+  MaybeSucceededBase<T> & MaybeSucceededHandler<T>
 >;
 
-export type Maybe<T = void, F = {}> =
+export type Maybe<T = void, F = any> =
   | MaybeFailed<F>
-  | MaybeSucceed<T>;
+  | MaybeSucceeded<T>;
 
-const any = (value: any): string | number | undefined => {
+const unknown = (value: unknown): string | number | undefined => {
   switch (typeof value) {
     case "function":
       return value.name;
@@ -54,7 +54,7 @@ export const fail = <T>(
   const base: MaybeFailedBase<T> = [
     Object.freeze(
       Object.assign(
-        Symbol(any(description)),
+        Symbol(unknown(description)),
         {
           timestamp: Date.now(),
           data,
@@ -72,11 +72,11 @@ export const fail = <T>(
 };
 
 export const succeed: {
-  (): MaybeSucceed<void>;
-  <T>(value: T): MaybeSucceed<T>;
-} = <T = void>(value?: T): MaybeSucceed<T> => {
-  const base: MaybeSucceedBase<T> = [undefined, value as any];
-  const handler: MaybeSucceedHandler<T> = {
+  (): MaybeSucceeded<void>;
+  <T>(value: T): MaybeSucceeded<T>;
+} = <T = void>(value?: T): MaybeSucceeded<T> => {
+  const base: MaybeSucceededBase<T> = [undefined, value as any];
+  const handler: MaybeSucceededHandler<T> = {
     failed: () => base[1],
     succeeded: (handler) => handler(base[1]),
   };
