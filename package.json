@@ -1,9 +1,9 @@
 {
   "name": "@intzaaa/maybe",
   "private": false,
-  "version": "3.0.0",
+  "version": "3.0.1",
   "scripts": {
-    "build": "tsup ./src/index.ts --dts --clean --format esm,cjs,iife --target es3",
+    "build": "tsup ./src/index.ts --minify --dts --clean --format esm,cjs,iife --target es3",
     "test": "node ./src/test.js",
     "build-publish": "npm run build && npm publish --access public --registry https://registry.npmjs.org"
   },
@@ -15,8 +15,9 @@
     "typescript": "^5.7.3"
   },
   "files": [
+    "src",
     "dist",
-    "README"
+    "README.md"
   ],
   "exports": {
     ".": {
