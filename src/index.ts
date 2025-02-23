@@ -1,68 +1,74 @@
-export type Error = Readonly<
-  symbol & {
-    timestamp: number;
-  }
+export type Error<T> = Readonly<
+  symbol & { data: T; timestamp: number }
 >;
 
-type Handler<T> = {
-  failed: (handler: (error: Error) => void) => T | void;
-  succeeded: (handler: (value: T) => void) => Error | void;
+type MaybeFailedBase<T> = [Error<T>, undefined];
+type MaybeFailedHandler<T> = {
+  failed: (handler: (error: Error<T>) => void) => void;
+  succeeded: (handler: (value: never) => void) => Error<T>;
 };
-
-type MaybeFailedBase = [Error, undefined];
-export type MaybeFailed = MaybeFailedBase & Handler<never>;
+export type MaybeFailed<T> = Readonly<
+  MaybeFailedBase<T> & MaybeFailedHandler<T>
+>;
 
 type MaybeSucceedBase<T> = [undefined, T];
-export type MaybeSucceed<T> = MaybeSucceedBase<T> & Handler<T>;
+type MaybeSucceedHandler<T> = {
+  failed: (handler: (error: never) => void) => T;
+  succeeded: (handler: (value: T) => void) => void;
+};
+export type MaybeSucceed<T> = Readonly<
+  MaybeSucceedBase<T> & MaybeSucceedHandler<T>
+>;
 
-export type Maybe<T = void> = Readonly<MaybeFailed | MaybeSucceed<T>>;
+export type Maybe<T = void, F = {}> =
+  | MaybeFailed<F>
+  | MaybeSucceed<T>;
 
-export const fail = (description?: any): MaybeFailed => {
-  const base: MaybeFailedBase = [
+const any = (value: any): string | number | undefined => {
+  switch (typeof value) {
+    case "function":
+      return value.name;
+    case "string":
+    case "number":
+    case "undefined":
+      return value;
+    case "bigint":
+      return value.toString();
+    case "symbol":
+      return value.description;
+    case "object":
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    default:
+      return String(value);
+  }
+};
+
+export const fail = <T>(
+  description?: any,
+  data: T = {} as T,
+): MaybeFailed<T> => {
+  const base: MaybeFailedBase<T> = [
     Object.freeze(
       Object.assign(
-        Symbol((() => {
-          switch (typeof description) {
-            case "string":
-            case "number":
-            case "undefined":
-              return description;
-            case "function":
-              return description.name;
-            case "bigint":
-              return description.toString();
-            case "symbol":
-              return description.description;
-            case "object":
-              try {
-                return JSON.stringify(description);
-              } catch {
-                return String(description);
-              }
-            default:
-              return String(description);
-          }
-        })()),
+        Symbol(any(description)),
         {
           timestamp: Date.now(),
+          data,
         },
       ),
     ),
     undefined,
   ];
+  const handler: MaybeFailedHandler<T> = {
+    failed: (handler) => handler(base[0]),
+    succeeded: () => base[0],
+  };
 
-  return Object.assign(
-    base,
-    {
-      failed: (handler) => {
-        handler(base[0]);
-        return undefined;
-      },
-      succeeded: () => {
-        return base[0];
-      },
-    } satisfies Handler<void>,
-  );
+  return Object.freeze(Object.assign(base, handler));
 };
 
 export const succeed: {
@@ -70,15 +76,10 @@ export const succeed: {
   <T>(value: T): MaybeSucceed<T>;
 } = <T = void>(value?: T): MaybeSucceed<T> => {
   const base: MaybeSucceedBase<T> = [undefined, value as any];
+  const handler: MaybeSucceedHandler<T> = {
+    failed: () => base[1],
+    succeeded: (handler) => handler(base[1]),
+  };
 
-  return Object.assign(
-    base,
-    {
-      failed: () => base[1],
-      succeeded: (handler) => {
-        handler(base[1]);
-        return undefined;
-      },
-    } satisfies Handler<T>,
-  );
+  return Object.freeze(Object.assign(base, handler));
 };

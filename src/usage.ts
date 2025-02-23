@@ -31,3 +31,5 @@ const err4 = fail("error").failed((err) => {
 });
 // err4 is an object with a description and timestamp
 // console logs "error"
+
+const [err_with_data] = fail("error", { foo: "bar" });
