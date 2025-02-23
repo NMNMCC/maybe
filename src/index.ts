@@ -4,7 +4,7 @@ export type Error<T> = Readonly<
 
 type MaybeFailedBase<T> = [Error<T>, undefined];
 type MaybeFailedHandler<T> = {
-  failed: (handler: (error: Error<T>) => void) => void;
+  failed: (handler: (error: Error<T>) => void) => undefined;
   succeeded: (handler: (value: never) => void) => Error<T>;
 };
 export type MaybeFailed<T> = Readonly<
@@ -14,7 +14,7 @@ export type MaybeFailed<T> = Readonly<
 type MaybeSucceededBase<T> = [undefined, T];
 type MaybeSucceededHandler<T> = {
   failed: (handler: (error: never) => void) => T;
-  succeeded: (handler: (value: T) => void) => void;
+  succeeded: (handler: (value: T) => void) => undefined;
 };
 export type MaybeSucceeded<T> = Readonly<
   MaybeSucceededBase<T> & MaybeSucceededHandler<T>
@@ -64,7 +64,10 @@ export const fail = <T>(
     undefined,
   ];
   const handler: MaybeFailedHandler<T> = {
-    failed: (handler) => handler(base[0]),
+    failed: (handler) => {
+      handler(base[0]);
+      return undefined;
+    },
     succeeded: () => base[0],
   };
 
@@ -78,7 +81,10 @@ export const succeed: {
   const base: MaybeSucceededBase<T> = [undefined, value as any];
   const handler: MaybeSucceededHandler<T> = {
     failed: () => base[1],
-    succeeded: (handler) => handler(base[1]),
+    succeeded: (handler) => {
+      handler(base[1]);
+      return undefined;
+    },
   };
 
   return Object.freeze(Object.assign(base, handler));
