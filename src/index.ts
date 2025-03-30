@@ -1,28 +1,20 @@
-export type Error<T> = Readonly<
-  symbol & { data: T; timestamp: number }
->;
+export type Error<T> = symbol & { data: T; timestamp: number };
 
 type MaybeFailedBase<T> = [Error<T>, undefined];
 type MaybeFailedHandler<T> = {
   failed: (handler: (error: Error<T>) => void) => undefined;
   succeeded: (handler: (value: never) => void) => Error<T>;
 };
-export type MaybeFailed<T> = Readonly<
-  MaybeFailedBase<T> & MaybeFailedHandler<T>
->;
+export type MaybeFailed<T> = MaybeFailedBase<T> & MaybeFailedHandler<T>;
 
 type MaybeSucceededBase<T> = [undefined, T];
 type MaybeSucceededHandler<T> = {
   failed: (handler: (error: never) => void) => T;
   succeeded: (handler: (value: T) => void) => undefined;
 };
-export type MaybeSucceeded<T> = Readonly<
-  MaybeSucceededBase<T> & MaybeSucceededHandler<T>
->;
+export type MaybeSucceeded<T> = MaybeSucceededBase<T> & MaybeSucceededHandler<T>;
 
-export type Maybe<T = void, F = any> =
-  | MaybeFailed<F>
-  | MaybeSucceeded<T>;
+export type Maybe<T = void, F = any> = MaybeFailed<F> | MaybeSucceeded<T>;
 
 const unknown = (value: unknown): string | number | undefined => {
   switch (typeof value) {
@@ -47,20 +39,12 @@ const unknown = (value: unknown): string | number | undefined => {
   }
 };
 
-export const fail = <T>(
-  description?: any,
-  data: T = {} as T,
-): MaybeFailed<T> => {
+export const fail = <T>(description?: any, data: T = {} as T): MaybeFailed<T> => {
   const base: MaybeFailedBase<T> = [
-    Object.freeze(
-      Object.assign(
-        Symbol(unknown(description)),
-        {
-          timestamp: Date.now(),
-          data,
-        },
-      ),
-    ),
+    Object.assign(Symbol(unknown(description)), {
+      timestamp: Date.now(),
+      data,
+    }),
     undefined,
   ];
   const handler: MaybeFailedHandler<T> = {
@@ -71,7 +55,7 @@ export const fail = <T>(
     succeeded: () => base[0],
   };
 
-  return Object.freeze(Object.assign(base, handler));
+  return Object.assign(base, handler);
 };
 
 export const succeed: {
@@ -87,5 +71,5 @@ export const succeed: {
     },
   };
 
-  return Object.freeze(Object.assign(base, handler));
+  return Object.assign(base, handler);
 };
